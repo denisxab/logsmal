@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Описание APi &mdash; документация $ИМЯ_ПРОЕКТА$ 0.0.1</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="prev" title="Быстрый старт" href="use_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> $ИМЯ_ПРОЕКТА$
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Оглавление:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="use_guide.html">Быстрый старт</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Описание APi</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">$ИМЯ_ПРОЕКТА$</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Описание APi</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-logsmal.logsmal">
+<span id="api"></span><h1>Описание APi<a class="headerlink" href="#module-logsmal.logsmal" title="Ссылка на этот заголовок"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="logsmal.logsmal.CompressionLog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">logsmal.logsmal.</span></span><span class="sig-name descname"><span class="pre">CompressionLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#logsmal.logsmal.CompressionLog" title="Ссылка на это определение"></a></dt>
+<dd><p>Варианты действий при достижении лимита размера файла</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="logsmal.logsmal.CompressionLog.rewrite_file">
+<span class="sig-name descname"><span class="pre">rewrite_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#logsmal.logsmal.CompressionLog.rewrite_file" title="Ссылка на это определение"></a></dt>
+<dd><p>Перезаписать файл (Удалить все и начать с 0)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="logsmal.logsmal.CompressionLog.zip_file">
+<span class="sig-name descname"><span class="pre">zip_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#logsmal.logsmal.CompressionLog.zip_file" title="Ссылка на это определение"></a></dt>
+<dd><p>Сжать лог файл в архив, а после удалить лог файл</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">logsmal.logsmal.</span></span><span class="sig-name descname"><span class="pre">MetaLogger</span></span><a class="headerlink" href="#logsmal.logsmal.MetaLogger" title="Ссылка на это определение"></a></dt>
+<dd><p>Мета данные логгера</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.blue">
+<span class="sig-name descname"><span class="pre">blue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[96m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.blue" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.gray">
+<span class="sig-name descname"><span class="pre">gray</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[90m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.gray" title="Ссылка на это определение"></a></dt>
+<dd><p>Серый</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.green">
+<span class="sig-name descname"><span class="pre">green</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[92m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.green" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.neon">
+<span class="sig-name descname"><span class="pre">neon</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[96m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.neon" title="Ссылка на это определение"></a></dt>
+<dd><p>Неон</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.read">
+<span class="sig-name descname"><span class="pre">read</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[91m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.read" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.reset_">
+<span class="sig-name descname"><span class="pre">reset_</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[0m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.reset_" title="Ссылка на это определение"></a></dt>
+<dd><p>Конец цвета</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.MetaLogger.yellow">
+<span class="sig-name descname"><span class="pre">yellow</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[93m'</span></em><a class="headerlink" href="#logsmal.logsmal.MetaLogger.yellow" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="logsmal.logsmal.logger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">logsmal.logsmal.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#logsmal.logsmal.logger" title="Ссылка на это определение"></a></dt>
+<dd><p>Стандартные логгеры</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.logger.error">
+<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logsmal.logsmal.loglevel</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#logsmal.logsmal.logger.error" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.logger.info">
+<span class="sig-name descname"><span class="pre">info</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logsmal.logsmal.loglevel</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#logsmal.logsmal.logger.info" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.logger.success">
+<span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logsmal.logsmal.loglevel</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#logsmal.logsmal.logger.success" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.logger.system_error">
+<span class="sig-name descname"><span class="pre">system_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#logsmal.logsmal.loglevel" title="logsmal.logsmal.loglevel"><span class="pre">logsmal.logsmal.loglevel</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logsmal.logsmal.loglevel</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#logsmal.logsmal.logger.system_error" title="Ссылка на это определение"></a></dt>
+<dd><p>Логгер для системных задач</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.logger.system_info">
+<span class="sig-name descname"><span class="pre">system_info</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Final</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#logsmal.logsmal.loglevel" title="logsmal.logsmal.loglevel"><span class="pre">logsmal.logsmal.loglevel</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logsmal.logsmal.loglevel</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#logsmal.logsmal.logger.system_info" title="Ссылка на это определение"></a></dt>
+<dd><p>Логгер для системных задач</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">logsmal.logsmal.</span></span><span class="sig-name descname"><span class="pre">loglevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_flag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_loglevel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_size_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'10mb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#logsmal.logsmal.CompressionLog" title="logsmal.logsmal.CompressionLog"><span class="pre">logsmal.logsmal.CompressionLog</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#logsmal.logsmal.loglevel" title="Ссылка на это определение"></a></dt>
+<dd><p>Создание логгера</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.CONT_CHECK_SIZE_LOG_FILE">
+<span class="sig-name descname"><span class="pre">CONT_CHECK_SIZE_LOG_FILE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.CONT_CHECK_SIZE_LOG_FILE" title="Ссылка на это определение"></a></dt>
+<dd><p>Через сколько записей в лог файл, проверять его размер.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_flag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_loglevel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_size_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'10mb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#logsmal.logsmal.CompressionLog" title="logsmal.logsmal.CompressionLog"><span class="pre">logsmal.logsmal.CompressionLog</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#logsmal.logsmal.loglevel.__init__" title="Ссылка на это определение"></a></dt>
+<dd><p>Создать логгер</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> – Уровень</p></li>
+<li><p><strong>fileout</strong> – Куда записать данные</p></li>
+<li><p><strong>console_out</strong> – Нужно ли выводить данные в <code class="docutils literal notranslate"><span class="pre">stdout</span></code></p></li>
+<li><p><strong>max_size_file</strong> – Максимальный размер(байтах), файла после которого происходит <code class="docutils literal notranslate"><span class="pre">compression</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Также можно указать:</p>
+<ul class="simple">
+<li><p>kb - Например 10kb</p></li>
+<li><p>mb - Например 1mb</p></li>
+<li><p>None - Без ограничений</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры</dt>
+<dd class="field-odd"><p><strong>compression</strong> – Что делать с файлам после достижение <code class="docutils literal notranslate"><span class="pre">max_size_file</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.color_flag">
+<span class="sig-name descname"><span class="pre">color_flag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.color_flag" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.color_loglevel">
+<span class="sig-name descname"><span class="pre">color_loglevel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.color_loglevel" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.compression">
+<span class="sig-name descname"><span class="pre">compression</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.compression" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.console_out">
+<span class="sig-name descname"><span class="pre">console_out</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.console_out" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.fileout">
+<span class="sig-name descname"><span class="pre">fileout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.fileout" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.level">
+<span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.level" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="logsmal.logsmal.loglevel.max_size_file">
+<span class="sig-name descname"><span class="pre">max_size_file</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#logsmal.logsmal.loglevel.max_size_file" title="Ссылка на это определение"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="use_guide.html" class="btn btn-neutral float-left" title="Быстрый старт" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Denis Kustov.</p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
