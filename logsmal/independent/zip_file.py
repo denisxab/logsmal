@@ -30,16 +30,18 @@ class ZippFile(BaseFile):
         self.call_log_info: Callable[[str, str], None] = call_log_info
         self.call_log_error: Callable[[str, str], None] = call_log_error
 
-    def writeFile(self, in_path: str, compression: ZipCompression = ZipCompression.ZIP_DEFLATED):
+    def writeFile(self, in_path: str, compression: ZipCompression = ZipCompression.ZIP_DEFLATED, arcname=None):
         """
         Записать файл в архив
 
         :param in_path: Путь к файлу
-        :param compression:
+        :param compression: Степень сжатия файла
+        :param arcname: По какому пути будет расположен файл в архиве
         """
         with ZipFile(self.name_file, 'w', compression=compression.value) as zip_file:
             if path.isfile(in_path):
-                zip_file.write(in_path)
+                zip_file.write(in_path, arcname)
+
 
     def writePath(self,
                   in_path: str,
@@ -97,7 +99,7 @@ class ZippFile(BaseFile):
                     zip_file.write(
                         full_path,
                         # Нам не нужен полный путь в архиве, поэтому мы его заменим на относительный
-                        arcname=full_path.replace(_base_folder, '.')
+                        arcname=full_path.replace(_base_folder, '')
                     )
                     self.call_log_info(full_path, flag="FILE_ADD")
                 elif path.isdir(full_path):
