@@ -6,6 +6,7 @@ from .independent.helpful import toBitSize
 from .independent.log_file import LogFile
 from .independent.zip_file import ZippFile, ZipCompression
 
+
 class MetaLogger:
     """
     Мета данные логгера
@@ -50,8 +51,9 @@ class loglevel:
     Создание логгера
     """
     __slots__ = [
-        "level",
+        "title_logger",
         "fileout",
+        "int_level",
         "console_out",
         "color_flag",
         "color_loglevel",
@@ -63,8 +65,13 @@ class loglevel:
     #: Через сколько записей в лог файл, проверять его размер.
     CONT_CHECK_SIZE_LOG_FILE = 10
 
+    #: Значение для фильтрации работы логгера
+    required_level: int = 10
+
     def __init__(
-            self, level: str,
+            self,
+            title_logger: str,
+            int_level: int = 10,
             fileout: Optional[str] = None,
             console_out: bool = True,
             color_flag: str = "",
@@ -75,7 +82,8 @@ class loglevel:
         """
         Создать логгер
 
-        :param level: Уровень
+        :param title_logger: Название логгера
+        :param int_level: Цифровое значение логгера
         :param fileout: Куда записать данные
         :param console_out: Нужно ли выводить данные в ``stdout``
         :param max_size_file: Максимальный размер(байтах), файла после которого происходит ``compression``.
@@ -88,14 +96,14 @@ class loglevel:
 
         :param compression: Что делать с файлам после достижение ``max_size_file``
         """
-        self.level: str = level
+        self.title_logger: str = title_logger
         self.fileout: Optional[str] = fileout
         self.console_out: bool = console_out
         self.color_flag: str = color_flag
         self.color_loglevel: str = color_loglevel
         self.max_size_file: Optional[int] = toBitSize(max_size_file) if max_size_file else None
         self.compression: Callable = compression if compression else CompressionLog.rewrite_file
-
+        self.int_level: int = int_level
         #: Сколько раз было записей в лог файл, до выполнения
         #: условия ``self._cont_write_log_file < CONT_CHECK_SIZE_LOG_FILE``
         self._cont_write_log_file = 0
@@ -106,9 +114,10 @@ class loglevel:
 
         :param data:
         :param flag:
-        :return:
         """
-        self._base(data, flag)
+        # Если уровень доступа выше или равен требуемому
+        if self.int_level >= self.required_level:
+            self._base(data, flag)
 
     def _base(self, data: Any, flag: str):
         """
@@ -116,11 +125,10 @@ class loglevel:
 
         :param data:
         :param flag:
-        :return:
         """
         if self.fileout:
             log_formatted = "{level}[{flag}]:{data}\n".format(
-                level=self.level,
+                level=self.title_logger,
                 flag=flag,
                 data=data,
             )
@@ -131,7 +139,7 @@ class loglevel:
 
         if self.console_out:
             log_formatted = "{color_loglevel}{level}{reset}{color_flag}[{flag}]{reset}:".format(
-                level=self.level,
+                level=self.title_logger,
                 color_loglevel=self.color_loglevel,
                 reset=MetaLogger.reset_,
                 flag=flag,
@@ -165,26 +173,28 @@ class logger:
     """
     Стандартные логгеры
     """
-
     info = loglevel(
         "[INFO]",
+        int_level=20,
         color_loglevel=MetaLogger.blue,
-        color_flag=MetaLogger.yellow,
-    )
-    error = loglevel(
-        "[ERROR]",
-        color_loglevel=MetaLogger.read,
         color_flag=MetaLogger.yellow,
     )
     success = loglevel(
         "[SUCCESS]",
+        int_level=25,
         color_loglevel=MetaLogger.green,
         color_flag=MetaLogger.gray,
     )
-
+    error = loglevel(
+        "[ERROR]",
+        int_level=40,
+        color_loglevel=MetaLogger.read,
+        color_flag=MetaLogger.yellow,
+    )
     #: Логгер для системных задач
     system_info: Final[loglevel] = loglevel(
         "[SYSTEM]",
+        int_level=40,
         color_loglevel=MetaLogger.gray,
         color_flag=MetaLogger.gray,
         console_out=True
@@ -192,6 +202,7 @@ class logger:
     #: Логгер для системных задач
     system_error: Final[loglevel] = loglevel(
         "[SYSTEM]",
+        int_level=45,
         color_loglevel=MetaLogger.gray,
         color_flag=MetaLogger.read,
         console_out=True

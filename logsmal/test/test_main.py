@@ -8,7 +8,6 @@ file_name = "./test.log"
 class TestCompressionLog:
 
     def setup(self):  # Выполнятся перед вызовом каждого метода
-
         ...
 
     @pytest.mark.parametrize(
@@ -47,8 +46,29 @@ class TestCompressionLog:
         _f.deleteFile()
         ZippFile(f"{file_name}.zip").deleteFile()
 
-    def teardown(self):  # Выполнятся после **успешного** выполнения каждого теста
-        ...
+    def test_int_log_level(self):
+        """
+        Проверка работы логера при разном уровни фильтрации
+        """
+        """
+        Уровень доступа разрешен
+        логгер должен выполняться
+        """
+        _f = LogFile(file_name)
+        _f.deleteFile()
+        logger.test = loglevel("TEST", fileout=file_name, console_out=False, int_level=10)
+        logger.test("ТЕСТ")
+        assert _f.readFile() == 'TEST[]:ТЕСТ\n'
+        _f.deleteFile()
+        """
+        Уровень доступа ЗАПРЕЩЕН
+        логгер не должен выполняться
+        """
+        _f.createFileIfDoesntExist()
+        loglevel.required_level = 20
+        logger.test("ТЕСТ")
+        assert _f.readFile() == ''
 
-    def __del__(self):  # Деструктор класса
-        ...
+    def teardown(self):  # Выполнятся после **успешного** выполнения каждого теста
+        _f = LogFile(file_name)
+        _f.deleteFile()
