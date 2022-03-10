@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 from typing import Final
 from typing import Optional, Any, Callable, Union
@@ -56,10 +57,12 @@ class loglevel:
         "int_level",
         "console_out",
         "color_flag",
-        "color_loglevel",
+        "color_title_logger",
         "max_size_file",
         "compression",
         "_cont_write_log_file",
+        "template_file",
+        "template_console",
     ]
 
     #: Через сколько записей в лог файл, проверять его размер.
@@ -75,9 +78,11 @@ class loglevel:
             fileout: Optional[str] = None,
             console_out: bool = True,
             color_flag: str = "",
-            color_loglevel: str = "",
+            color_title_logger: str = "",
             max_size_file: Optional[Union[int, str]] = "10mb",
             compression: Optional[Union[CompressionLog, Callable]] = None,
+            template_file: str = "[{title_logger}][{flag}]:{data}\n",
+            template_console: str = "{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:{data}",
     ):
         """
         Создать логгер
@@ -95,15 +100,21 @@ class loglevel:
         - None - Без ограничений
 
         :param compression: Что делать с файлам после достижение ``max_size_file``
+
+        :param template_file: Доступные аргументы в :meth:`allowed_template_loglevel`
+        :param template_console: Доступные аргументы в :meth:`allowed_template_loglevel`
         """
         self.title_logger: str = title_logger
         self.fileout: Optional[str] = fileout
         self.console_out: bool = console_out
         self.color_flag: str = color_flag
-        self.color_loglevel: str = color_loglevel
+        self.color_title_logger: str = color_title_logger
         self.max_size_file: Optional[int] = toBitSize(max_size_file) if max_size_file else None
         self.compression: Callable = compression if compression else CompressionLog.rewrite_file
         self.int_level: int = int_level
+        self.template_file: str = template_file
+        self.template_console: str = template_console
+
         #: Сколько раз было записей в лог файл, до выполнения
         #: условия ``self._cont_write_log_file < CONT_CHECK_SIZE_LOG_FILE``
         self._cont_write_log_file = 0
@@ -126,31 +137,25 @@ class loglevel:
         :param data:
         :param flag:
         """
+
         if self.fileout:
-            log_formatted = "{level}[{flag}]:{data}\n".format(
-                level=self.title_logger,
-                flag=flag,
-                data=data,
-            )
+            # Формируем сообщение в файл
+            log_formatted = allowed_template_loglevel(self.template_file, data, flag, self)
+            # Записываем в файл
             _f = LogFile(self.fileout)
             _f.appendFile(log_formatted)
-            # Проверить размер файла
+            # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
             self._check_size_log_file(_f)
 
         if self.console_out:
-            log_formatted = "{color_loglevel}{level}{reset}{color_flag}[{flag}]{reset}:".format(
-                level=self.title_logger,
-                color_loglevel=self.color_loglevel,
-                reset=MetaLogger.reset_,
-                flag=flag,
-                color_flag=self.color_flag
-            )
-            print(f"{log_formatted}{data}")
+            # Формируем сообщение в консоль
+            log_formatted = allowed_template_loglevel(self.template_console, data, flag, self)
+            print(log_formatted)
 
     def _check_size_log_file(self, _file: LogFile):
         """
-        Проверить размер файла при достижении условия определенного
-        количества записи в файл
+        Для оптимизации, проверка размера файла происходит
+        при достижении условия определенного количества записи в файл
 
         :param _file: Файл
         """
@@ -160,7 +165,8 @@ class loglevel:
 
     def _check_compression_log_file(self, size_file: int):
         """
-        Проверить нужно ли выполнять  ``compression``
+        Проверить размер файла.
+        Если он превышает ``self.max_size_file`` то  выполнять  ``self.compression``
 
         :param size_file: Размер файла в байтах
         """
@@ -169,41 +175,96 @@ class loglevel:
                 self.compression(self.fileout)
 
 
+class allowed_template_loglevel:
+    """
+    Доступные ключи для шаблона лог сообщения в файл
+
+    :Пример передачи:
+
+    ``{level}{flag}{data}\n``
+    ``{color_loglevel}{level}{reset}{color_flag}{flag}{reset}``
+    """
+
+    def __new__(
+            cls,
+            _template: str,
+            data,
+            flag,
+            root_loglevel: loglevel
+    ) -> str:
+        """
+
+        :param _template:
+        :param flag:
+        :param data:
+        :param title_logger: Название логера
+        :param reset: Закрыть цвет
+        :param color_title_logger:  Цвет заголовка логера
+        :param color_flag: Цвет флага
+        :param date_now:  Дата создания сообщения
+        """
+
+        return _template.format(
+            title_logger=root_loglevel.title_logger,
+            flag=flag,
+            data=data,
+            date_now=datetime.datetime.now(),
+            reset=MetaLogger.reset_,
+            color_title_logger=root_loglevel.color_title_logger,
+            color_flag=root_loglevel.color_flag,
+        )
+
+
 class logger:
     """
     Стандартные логгеры
     """
     info = loglevel(
-        "[INFO]",
+        "INFO",
         int_level=20,
-        color_loglevel=MetaLogger.blue,
+        color_title_logger=MetaLogger.blue,
         color_flag=MetaLogger.yellow,
     )
     success = loglevel(
-        "[SUCCESS]",
+        "SUCCESS",
         int_level=25,
-        color_loglevel=MetaLogger.green,
+        color_title_logger=MetaLogger.green,
         color_flag=MetaLogger.gray,
     )
     error = loglevel(
-        "[ERROR]",
+        "ERROR",
         int_level=40,
-        color_loglevel=MetaLogger.read,
+        color_title_logger=MetaLogger.read,
         color_flag=MetaLogger.yellow,
     )
+
+    test = loglevel(
+        'TEST',
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:\n{data}",
+        color_flag=MetaLogger.gray,
+        color_title_logger=MetaLogger.yellow
+    )
+
+    warning = loglevel(
+        "WARNING",
+        int_level=30,
+        color_flag=MetaLogger.read,
+        color_title_logger=MetaLogger.yellow,
+    )
+
     #: Логгер для системных задач
     system_info: Final[loglevel] = loglevel(
-        "[SYSTEM]",
+        "SYSTEM",
         int_level=40,
-        color_loglevel=MetaLogger.gray,
+        color_title_logger=MetaLogger.gray,
         color_flag=MetaLogger.gray,
         console_out=True
     )
     #: Логгер для системных задач
     system_error: Final[loglevel] = loglevel(
-        "[SYSTEM]",
+        "SYSTEM",
         int_level=45,
-        color_loglevel=MetaLogger.gray,
+        color_title_logger=MetaLogger.gray,
         color_flag=MetaLogger.read,
         console_out=True
     )

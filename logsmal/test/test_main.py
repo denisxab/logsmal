@@ -14,18 +14,18 @@ class TestCompressionLog:
         ('_loger', "_len"),
         [
             (loglevel('TEST',
-                      file_name,
+                      fileout=file_name,
                       console_out=False,
                       max_size_file=30,
                       compression=CompressionLog.rewrite_file),
-             90,
+             92,
              ),
             (loglevel('TEST',
-                      file_name,
+                      fileout=file_name,
                       console_out=False,
                       max_size_file=30,
                       compression=CompressionLog.zip_file),
-             90,
+             92,
              )
         ]
     )
@@ -41,8 +41,8 @@ class TestCompressionLog:
         _f.deleteFile()
         for x in range(_len):
             logger.test(str(x))
-        assert _f.readFile() == "TEST[]:88\nTEST[]:89\n"
-        assert _f.sizeFile() == 20
+        assert _f.readFile() == '[TEST][]:90\n[TEST][]:91\n'
+        assert _f.sizeFile() == 24
         _f.deleteFile()
         ZippFile(f"{file_name}.zip").deleteFile()
 
@@ -58,7 +58,7 @@ class TestCompressionLog:
         _f.deleteFile()
         logger.test = loglevel("TEST", fileout=file_name, console_out=False, int_level=10)
         logger.test("ТЕСТ")
-        assert _f.readFile() == 'TEST[]:ТЕСТ\n'
+        assert _f.readFile() == '[TEST][]:ТЕСТ\n'
         _f.deleteFile()
         """
         Уровень доступа ЗАПРЕЩЕН
@@ -72,3 +72,6 @@ class TestCompressionLog:
     def teardown(self):  # Выполнятся после **успешного** выполнения каждого теста
         _f = LogFile(file_name)
         _f.deleteFile()
+
+    def test_форматирование_сообщения(self):
+        ...
