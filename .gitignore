@@ -1,5 +1,5 @@
 /.idea
-/venvs
+/venv
 /dist
 /__pycache__/
 /logsmal/__pycache__/

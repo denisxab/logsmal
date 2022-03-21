@@ -1,8 +1,0 @@
-#!/media/denis/dd19b13d-bd85-46bb-8db9-5b8f6cf7a825/MyProject/PycharmProjects/logsmal/venv/bin/python3.10
-# -*- coding: utf-8 -*-
-import re
-import sys
-from pytest import console_main
-if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(console_main())
