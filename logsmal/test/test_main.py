@@ -5,16 +5,6 @@ from logsmal import loglevel, CompressionLog, logger, LogFile, ZippFile
 file_name = "./test.log"
 
 
-def test_head():
-    print()
-    logger.debug("Привет вселенная", 'От землян')
-    logger.info("Привет вселенная", 'От землян')
-    logger.success("Привет вселенная", 'От землян')
-    logger.warning("Привет вселенная", 'От землян')
-    logger.error("Привет вселенная", 'От землян')
-    logger.test("Привет вселенная", 'От землян')
-
-
 class TestCompressionLog:
 
     def setup(self):  # Выполнятся перед вызовом каждого метода
@@ -85,3 +75,12 @@ class TestCompressionLog:
 
     def test_форматирование_сообщения(self):
         ...
+
+    def test_style(self):
+        print()
+        logger.debug("Привет вселенная", 'От землян')
+        logger.info("Привет вселенная", 'От землян')
+        logger.success("Привет вселенная", 'От землян')
+        logger.warning("Привет вселенная", 'От землян')
+        logger.error("Привет вселенная", 'От землян')
+        logger.test("Привет вселенная", 'От землян')
