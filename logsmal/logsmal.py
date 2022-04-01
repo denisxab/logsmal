@@ -1,7 +1,7 @@
-import datetime
-import os
+from datetime import datetime
 from enum import Enum
 from inspect import stack, getframeinfo
+from os import path
 from typing import Final
 from typing import Optional, Any, Callable, Union
 
@@ -218,7 +218,7 @@ class allowed_template_loglevel:
             flag=flag,
             data=data,
             #  Дата создания сообщения
-            date_now=datetime.datetime.now(),
+            date_now=datetime.now(),
             # Закрыть цвет
             reset=MetaLogger.reset_,
             #  Цвет заголовка логера
@@ -250,7 +250,7 @@ class allowed_template_loglevel:
             flag=flag,
             data=data,
             #  Дата создания сообщения
-            date_now=datetime.datetime.now(),
+            date_now=datetime.now(),
             # Закрыть цвет
             reset=MetaLogger.reset_,
             #  Цвет заголовка логера
@@ -266,7 +266,7 @@ class allowed_template_loglevel:
             # Абсолютный путь к файлу в котором вызвана функция
             abs_file_call=caller.filename,
             # Файл в котором вызвана функция
-            file_call=os.path.basename(caller.filename)
+            file_call=path.basename(caller.filename)
         )
 
 
