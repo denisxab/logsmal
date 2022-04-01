@@ -26,10 +26,12 @@ logger.MyLogger = loglevel(
 ```python
 from logsmal import loglevel, logger
 
-logger.test = loglevel("TEST",
-                       fileout="./log/log_test.log",
-                       console_out=False,
-                       int_level=10)
+logger.test = loglevel(
+    "TEST",
+    fileout="./log/log_test.log",
+    console_out=False,
+    int_level=10
+)
 
 loglevel.required_level = 20
 logger.test("Текстовое сообщение")
