@@ -1,27 +1,14 @@
 import datetime
+import os
 from enum import Enum
+from inspect import stack, getframeinfo
 from typing import Final
 from typing import Optional, Any, Callable, Union
 
+from helpful import MetaLogger
 from .independent.helpful import toBitSize
 from .independent.log_file import LogFile
 from .independent.zip_file import ZippFile, ZipCompression
-
-
-class MetaLogger:
-    """
-    Мета данные логгера
-    """
-    #: Конец цвета
-    reset_: Final[str] = "\x1b[0m"
-    blue: Final[str] = "\x1b[96m"
-    yellow: Final[str] = "\x1b[93m"
-    read: Final[str] = "\x1b[91m"
-    green: Final[str] = "\x1b[92m"
-    #: Серый
-    gray: Final[str] = "\x1b[90m"
-    #: Неон
-    neon: Final[str] = "\x1b[96m"
 
 
 class CompressionLog(Enum):
@@ -51,24 +38,11 @@ class loglevel:
     """
     Создание логгера
     """
-    __slots__ = [
-        "title_logger",
-        "fileout",
-        "int_level",
-        "console_out",
-        "color_flag",
-        "color_title_logger",
-        "max_size_file",
-        "compression",
-        "_cont_write_log_file",
-        "template_file",
-        "template_console",
-    ]
 
     #: Через сколько записей в лог файл, проверять его размер.
     CONT_CHECK_SIZE_LOG_FILE = 10
 
-    #: Значение для фильтрации работы логгера
+    #: Значение для фильтрации срабатывания логгера
     required_level: int = 10
 
     def __init__(
@@ -106,6 +80,12 @@ class loglevel:
         """
         self.title_logger: str = title_logger
         self.fileout: Optional[str] = fileout
+        if fileout:
+            # Если указан файл, то записываем функцию для записи в файл
+            self._base_logic = lambda data, flag: (self._file_write(data, flag), self._console_print(data, flag))
+        else:
+            self._base_logic = lambda data, flag: self._console_print(data, flag)
+
         self.console_out: bool = console_out
         self.color_flag: str = color_flag
         self.color_title_logger: str = color_title_logger
@@ -128,29 +108,34 @@ class loglevel:
         """
         # Если уровень доступа выше или равен требуемому
         if self.int_level >= self.required_level:
-            self._base(data, flag)
+            # Выполняем логику логера
+            self._base_logic(data, flag)
 
-    def _base(self, data: Any, flag: str):
+    def _file_write(self, data: Any, flag: str):
         """
-        Логика работы логера
+        Метод вызваться для записи в файл
 
         :param data:
         :param flag:
         """
+        # Формируем сообщение в файл
+        log_formatted = allowed_template_loglevel(self.template_file, data, flag, self)
+        # Записываем в файл
+        _f = LogFile(self.fileout)
+        _f.appendFile(log_formatted)
+        # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
+        self._check_size_log_file(_f)
 
-        if self.fileout:
-            # Формируем сообщение в файл
-            log_formatted = allowed_template_loglevel(self.template_file, data, flag, self)
-            # Записываем в файл
-            _f = LogFile(self.fileout)
-            _f.appendFile(log_formatted)
-            # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
-            self._check_size_log_file(_f)
+    def _console_print(self, data: Any, flag: str):
+        """
+        Метод вызваться для вывода данных в консоль
 
-        if self.console_out:
-            # Формируем сообщение в консоль
-            log_formatted = allowed_template_loglevel(self.template_console, data, flag, self)
-            print(log_formatted)
+        :param data:
+        :param flag:
+        """
+        # Формируем сообщение в консоль
+        log_formatted = allowed_template_loglevel(self.template_console, data, flag, self)
+        print(log_formatted)
 
     def _check_size_log_file(self, _file: LogFile):
         """
@@ -174,6 +159,35 @@ class loglevel:
             if size_file > self.max_size_file:
                 self.compression(self.fileout)
 
+    def _base_logic(self, data: Any, flag: str):
+        """
+        Логика работы логера
+
+        :param data:
+        :param flag:
+        """
+        ...
+
+
+class loglevel_debug(loglevel):
+    """
+    Логер для дибага, с расширенной информацией о коде
+    """
+
+    def _file_write(self, data: Any, flag: str):
+        # Формируем сообщение в файл
+        log_formatted = allowed_template_loglevel.debug_new(self.template_file, data, flag, self)
+        # Записываем в файл
+        _f = LogFile(self.fileout)
+        _f.appendFile(log_formatted)
+        # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
+        self._check_size_log_file(_f)
+
+    def _console_print(self, data: Any, flag: str):
+        # Формируем сообщение в консоль
+        log_formatted = allowed_template_loglevel.debug_new(self.template_console, data, flag, self)
+        print(log_formatted)
+
 
 class allowed_template_loglevel:
     """
@@ -193,25 +207,66 @@ class allowed_template_loglevel:
             root_loglevel: loglevel
     ) -> str:
         """
-
         :param _template:
         :param flag:
         :param data:
-        :param title_logger: Название логера
-        :param reset: Закрыть цвет
-        :param color_title_logger:  Цвет заголовка логера
-        :param color_flag: Цвет флага
-        :param date_now:  Дата создания сообщения
         """
 
         return _template.format(
+            #  Название логера
             title_logger=root_loglevel.title_logger,
             flag=flag,
             data=data,
+            #  Дата создания сообщения
             date_now=datetime.datetime.now(),
+            # Закрыть цвет
             reset=MetaLogger.reset_,
+            #  Цвет заголовка логера
             color_title_logger=root_loglevel.color_title_logger,
+            # Цвет флага
             color_flag=root_loglevel.color_flag,
+        )
+
+    @classmethod
+    def debug_new(
+            cls,
+            _template: str,
+            data,
+            flag,
+            root_loglevel: loglevel
+    ):
+        """
+
+        :param root_loglevel:
+        :param _template:
+        :param flag:
+        :param data:
+        """
+
+        caller = getframeinfo(stack()[4][0])
+        return _template.format(
+            #  Название логера
+            title_logger=root_loglevel.title_logger,
+            flag=flag,
+            data=data,
+            #  Дата создания сообщения
+            date_now=datetime.datetime.now(),
+            # Закрыть цвет
+            reset=MetaLogger.reset_,
+            #  Цвет заголовка логера
+            color_title_logger=root_loglevel.color_title_logger,
+            # Цвет флага
+            color_flag=root_loglevel.color_flag,
+            # Номер строки
+            line_call=caller.lineno,
+            # Функция в которой вызвана функция
+            func_call=caller.function,
+            # Контекст
+            context_call=''.join(caller.code_context[0].split()),
+            # Абсолютный путь к файлу в котором вызвана функция
+            abs_file_call=caller.filename,
+            # Файл в котором вызвана функция
+            file_call=os.path.basename(caller.filename)
         )
 
 
@@ -219,10 +274,18 @@ class logger:
     """
     Стандартные логгеры
     """
+    debug = loglevel_debug(
+        "DEBUG",
+        int_level=10,
+        color_title_logger=MetaLogger.magenta,
+        color_flag=MetaLogger.magenta,
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}[{file_call}:{line_call}]:{data}\t\t\t[{context_call}]"
+    )
+
     info = loglevel(
         "INFO",
         int_level=20,
-        color_title_logger=MetaLogger.blue,
+        color_title_logger=MetaLogger.bright_blue,
         color_flag=MetaLogger.yellow,
     )
     success = loglevel(
@@ -242,7 +305,7 @@ class logger:
         'TEST',
         template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:\n{data}",
         color_flag=MetaLogger.gray,
-        color_title_logger=MetaLogger.yellow
+        color_title_logger=MetaLogger.magenta
     )
 
     warning = loglevel(
