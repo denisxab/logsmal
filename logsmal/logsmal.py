@@ -23,12 +23,14 @@ class CompressionLog(Enum):
 
     @staticmethod
     def _rewrite_file(_path_file: str):
+        """Стереть данные из лог файла"""
         _f = LogFile(_path_file)
         logger.system_info(f"{_path_file}:{_f.sizeFile()}", flag="DELETE")
         _f.deleteFile()
 
     @staticmethod
     def _zip_file(_path_file: str):
+        """Сжать лог файл в архив"""
         ZippFile(f"{_path_file}.zip").writeFile(_path_file, compression=ZipCompression.ZIP_LZMA)
         LogFile(_path_file).deleteFile()
         logger.system_info(_path_file, flag="ZIP_AND_DELETE")
@@ -81,7 +83,7 @@ class loglevel:
         self.title_logger: str = title_logger
         self.fileout: Optional[str] = fileout
         if fileout:
-            # Если указан файл, то записываем функцию для записи в файл
+            # Если указан файл, то добавляем функцию для записи в файл
             self._base_logic = lambda data, flag: (self._file_write(data, flag), self._console_print(data, flag))
         else:
             self._base_logic = lambda data, flag: self._console_print(data, flag)
