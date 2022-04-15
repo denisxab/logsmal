@@ -5,7 +5,7 @@ from os import path
 from typing import Final
 from typing import Optional, Any, Callable, Union
 
-from helpful import MetaLogger
+from .helpful import MetaLogger
 from .independent.helpful import toBitSize
 from .independent.log_file import LogFile
 from .independent.zip_file import ZippFile, ZipCompression
@@ -57,7 +57,7 @@ class loglevel:
             color_title_logger: str = "",
             max_size_file: Optional[Union[int, str]] = "10mb",
             compression: Optional[Union[CompressionLog, Callable]] = None,
-            template_file: str = "[{title_logger}][{flag}]:{data}\n",
+            template_file: str = "[{date_now}][{title_logger}][{flag}]:{data}\n",
             template_console: str = "{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:{data}",
     ):
         """
