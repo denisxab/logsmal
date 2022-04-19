@@ -59,6 +59,7 @@ class loglevel:
             compression: Optional[Union[CompressionLog, Callable]] = None,
             template_file: str = "[{date_now}][{title_logger}][{flag}]:{data}\n",
             template_console: str = "{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:{data}",
+            **kwargs,
     ):
         """
         Создать логгер
