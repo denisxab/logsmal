@@ -44,7 +44,8 @@ class loglevel:
     #: Через сколько записей в лог файл, проверять его размер.
     CONT_CHECK_SIZE_LOG_FILE = 10
 
-    #: Значение для фильтрации срабатывания логгера
+    # : Значение, которое определяет срабатывания логгера, если у экземпляра логера значение меньше чем это,
+    # то он не сработает
     required_level: int = 10
 
     def __init__(
@@ -172,9 +173,11 @@ class loglevel:
         ...
 
 
-class loglevel_debug(loglevel):
+class loglevel_extend(loglevel):
     """
-    Логер для дибага, с расширенной информацией о коде
+    Логгер с расширенной информацией о коде
+
+    В данном случае у нас будет возможность указать место в коде где вызван логгер
     """
 
     def _file_write(self, data: Any, flag: str):
@@ -277,14 +280,19 @@ class logger:
     """
     Стандартные логгеры
     """
-    debug = loglevel_debug(
+    test = loglevel(
+        'TEST',
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:\n{data}",
+        color_flag=MetaLogger.gray,
+        color_title_logger=MetaLogger.magenta
+    )
+    debug = loglevel_extend(
         "DEBUG",
         int_level=10,
         color_title_logger=MetaLogger.magenta,
         color_flag=MetaLogger.magenta,
         template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}[{file_call}:{line_call}]:{data}\t\t\t[{context_call}]"
     )
-
     info = loglevel(
         "INFO",
         int_level=20,
@@ -297,27 +305,22 @@ class logger:
         color_title_logger=MetaLogger.green,
         color_flag=MetaLogger.gray,
     )
-    error = loglevel(
+    error = loglevel_extend(
         "ERROR",
         int_level=40,
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_title_logger=MetaLogger.read,
         color_flag=MetaLogger.yellow,
     )
-
-    test = loglevel(
-        'TEST',
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:\n{data}",
-        color_flag=MetaLogger.gray,
-        color_title_logger=MetaLogger.magenta
-    )
-
-    warning = loglevel(
+    warning = loglevel_extend(
         "WARNING",
         int_level=30,
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_flag=MetaLogger.read,
         color_title_logger=MetaLogger.yellow,
     )
-
     #: Логгер для системных задач
     system_info: Final[loglevel] = loglevel(
         "SYSTEM",
