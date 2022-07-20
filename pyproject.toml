@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "logsmal"
-version = "0.0.10"
+version = "0.0.11"
 description = "Создание файлов конфигураци"
 repository = "https://github.com/denisxab/logsmal.git"
 documentation = "https://logsmal.readthedocs.io/ru/latest/index.html"

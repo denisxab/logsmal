@@ -10,6 +10,8 @@ from .independent.helpful import toBitSize
 from .independent.log_file import LogFile
 from .independent.zip_file import ZippFile, ZipCompression
 
+__all__ = ["logger", "loglevel"]
+
 
 class CompressionLog(Enum):
     """
