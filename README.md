@@ -1,4 +1,4 @@
-## Использование
+# Использование
 
 ```python
 from logsmal import logger
