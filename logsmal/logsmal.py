@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from inspect import stack, getframeinfo
 from os import path
-from typing import Final
+from typing import Final, Literal
 from typing import Optional, Any, Callable, Union
 
 from .helpful import MetaLogger
@@ -18,24 +18,26 @@ class CompressionLog(Enum):
     Варианты действий при достижении лимита размера файла
     """
     #: Перезаписать файл (Удалить все и начать с 0)
-    rewrite_file = lambda _path_file: CompressionLog._rewrite_file(_path_file)
+    def rewrite_file(
+        _path_file): return CompressionLog._rewrite_file(_path_file)
 
     #: Сжать лог файл в архив, а после удалить лог файл
-    zip_file = lambda _path_file: CompressionLog._zip_file(_path_file)
+    def zip_file(_path_file): return CompressionLog._zip_file(_path_file)
 
     @staticmethod
     def _rewrite_file(_path_file: str):
         """Стереть данные из лог файла"""
         _f = LogFile(_path_file)
-        logger.system_info(f"{_path_file}:{_f.sizeFile()}", flag="DELETE")
+        logger.system_info(f"{_path_file}:{_f.sizeFile()}", flags=["DELETE"])
         _f.deleteFile()
 
     @staticmethod
     def _zip_file(_path_file: str):
         """Сжать лог файл в архив"""
-        ZippFile(f"{_path_file}.zip").writeFile(_path_file, compression=ZipCompression.ZIP_LZMA)
+        ZippFile(f"{_path_file}.zip").writeFile(
+            _path_file, compression=ZipCompression.ZIP_LZMA)
         LogFile(_path_file).deleteFile()
-        logger.system_info(_path_file, flag="ZIP_AND_DELETE")
+        logger.system_info(_path_file, flags=["ZIP_AND_DELETE"])
 
 
 class loglevel:
@@ -59,9 +61,10 @@ class loglevel:
             color_flag: str = "",
             color_title_logger: str = "",
             max_size_file: Optional[Union[int, str]] = "10mb",
+            max_len_console: int = 0,
             compression: Optional[Union[CompressionLog, Callable]] = None,
-            template_file: str = "[{date_now}][{title_logger}][{flag}]:{data}\n",
-            template_console: str = "{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:{data}",
+            template_file: str = "[{date_now}][{title_logger}][{flags}]:{data}\n",
+            template_console: str = "{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}:{data}",
             **kwargs,
     ):
         """
@@ -72,15 +75,12 @@ class loglevel:
         :param fileout: Куда записать данные
         :param console_out: Нужно ли выводить данные в ``stdout``
         :param max_size_file: Максимальный размер(байтах), файла после которого происходит ``compression``.
-
-        Также можно указать:
-
-        - kb - Например 10kb
-        - mb - Например 1mb
-        - None - Без ограничений
-
+            Также можно указать:
+            - kb - Например 10kb
+            - mb - Например 1mb
+            - None - Без ограничений
+        :param max_len_console: Скольки максимум символов выводить в консоль, остальное обрезать.По умолчанию не обрезать  
         :param compression: Что делать с файлам после достижение ``max_size_file``
-
         :param template_file: Доступные аргументы в :meth:`allowed_template_loglevel`
         :param template_console: Доступные аргументы в :meth:`allowed_template_loglevel`
         """
@@ -88,14 +88,18 @@ class loglevel:
         self.fileout: Optional[str] = fileout
         if fileout:
             # Если указан файл, то добавляем функцию для записи в файл
-            self._base_logic = lambda data, flag: (self._file_write(data, flag), self._console_print(data, flag))
+            self._base_logic = lambda data, flags: (self._file_write(
+                data, flags), self._console_print(data, flags))
         else:
-            self._base_logic = lambda data, flag: self._console_print(data, flag)
+            self._base_logic = lambda data, flags: self._console_print(
+                data, flags)
 
         self.console_out: bool = console_out
         self.color_flag: str = color_flag
         self.color_title_logger: str = color_title_logger
-        self.max_size_file: Optional[int] = toBitSize(max_size_file) if max_size_file else None
+        self.max_size_file: Optional[int] = toBitSize(
+            max_size_file) if max_size_file else None
+        self.max_len_console: int = max_len_console
         self.compression: Callable = compression if compression else CompressionLog.rewrite_file
         self.int_level: int = int_level
         self.template_file: str = template_file
@@ -105,43 +109,46 @@ class loglevel:
         #: условия ``self._cont_write_log_file < CONT_CHECK_SIZE_LOG_FILE``
         self._cont_write_log_file = 0
 
-    def __call__(self, data: str, flag: str = ""):
+    def __call__(self, data: str, flags: list[str] = ""):
         """
         Вызвать логгер
 
         :param data:
-        :param flag:
+        :param flags:
         """
         # Если уровень доступа выше или равен требуемому
         if self.int_level >= self.required_level:
             # Выполняем логику логера
-            self._base_logic(data, flag)
+            self._base_logic(data, flags)
 
-    def _file_write(self, data: Any, flag: str):
+    def _file_write(self, data: Any, flags: list[str]):
         """
         Метод вызваться для записи в файл
 
         :param data:
-        :param flag:
+        :param flags:
         """
         # Формируем сообщение в файл
-        log_formatted = allowed_template_loglevel(self.template_file, data, flag, self)
+        log_formatted = allowed_template_loglevel(
+            self.template_file, data, flags, self, 'file')
         # Записываем в файл
         _f = LogFile(self.fileout)
         _f.appendFile(log_formatted)
         # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
         self._check_size_log_file(_f)
 
-    def _console_print(self, data: Any, flag: str):
+    def _console_print(self, data: Any, flags: list[str]):
         """
         Метод вызваться для вывода данных в консоль
 
         :param data:
-        :param flag:
+        :param flags:
         """
-        # Формируем сообщение в консоль
-        log_formatted = allowed_template_loglevel(self.template_console, data, flag, self)
-        print(log_formatted)
+        if self.console_out:
+            # Формируем сообщение в консоль
+            log_formatted = allowed_template_loglevel(
+                self.template_console, data, flags, self, 'console')
+            print(log_formatted)
 
     def _check_size_log_file(self, _file: LogFile):
         """
@@ -165,14 +172,22 @@ class loglevel:
             if size_file > self.max_size_file:
                 self.compression(self.fileout)
 
-    def _base_logic(self, data: Any, flag: str):
+    def _base_logic(self, data: Any, flags: list[str]):
         """
         Логика работы логера
 
         :param data:
-        :param flag:
+        :param flags:
         """
         ...
+
+    def updateCopy(self, **kwargs):
+        """
+        Вернуть обновленную версию loglevel
+
+        kwargs: Обновление для loglevel.__init__ 
+        """
+        return loglevel(**dict(self.__dict__, **kwargs))
 
 
 class loglevel_extend(loglevel):
@@ -182,19 +197,30 @@ class loglevel_extend(loglevel):
     В данном случае у нас будет возможность указать место в коде где вызван логгер
     """
 
-    def _file_write(self, data: Any, flag: str):
+    def _file_write(self, data: Any, flags: str):
         # Формируем сообщение в файл
-        log_formatted = allowed_template_loglevel.debug_new(self.template_file, data, flag, self)
+        log_formatted = allowed_template_loglevel.debug_new(
+            self.template_file, data, flags, self, 'file')
         # Записываем в файл
         _f = LogFile(self.fileout)
         _f.appendFile(log_formatted)
         # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
         self._check_size_log_file(_f)
 
-    def _console_print(self, data: Any, flag: str):
-        # Формируем сообщение в консоль
-        log_formatted = allowed_template_loglevel.debug_new(self.template_console, data, flag, self)
-        print(log_formatted)
+    def _console_print(self, data: Any, flags: str):
+        if self.console_out:
+            # Формируем сообщение в консоль
+            log_formatted = allowed_template_loglevel.debug_new(
+                self.template_console, data, flags, self, 'console')
+            print(log_formatted)
+
+    def updateCopy(self, **kwargs):
+        """
+        Вернуть обновленную версию loglevel_extend
+
+        kwargs: Обновление для loglevel_extend.__init__ 
+        """
+        return loglevel_extend(**dict(self.__dict__, **kwargs))
 
 
 class allowed_template_loglevel:
@@ -203,28 +229,33 @@ class allowed_template_loglevel:
 
     :Пример передачи:
 
-    ``{level}{flag}{data}\n``
-    ``{color_loglevel}{level}{reset}{color_flag}{flag}{reset}``
+    ``{level}{flags}{data}\n``
+    ``{color_loglevel}{level}{reset}{color_flag}{flags}{reset}``
     """
 
     def __new__(
             cls,
             _template: str,
             data,
-            flag,
-            root_loglevel: loglevel
+            flags,
+            root_loglevel: loglevel,
+            type_d: Literal['file', 'console'] = 'console'
     ) -> str:
         """
+        Обычное сообщение
+
         :param _template:
-        :param flag:
+        :param flags:
         :param data:
         """
 
         return _template.format(
             #  Название логера
             title_logger=root_loglevel.title_logger,
-            flag=flag,
-            data=data,
+            # Флаги
+            flags=';'.join([str(x) for x in flags]),
+            # Если нужно обрезаем сообщение
+            data=data[:root_loglevel.max_len_console] if type_d == 'console' and root_loglevel.max_len_console > 0 else data,
             #  Дата создания сообщения
             date_now=datetime.now(),
             # Закрыть цвет
@@ -240,14 +271,16 @@ class allowed_template_loglevel:
             cls,
             _template: str,
             data,
-            flag,
-            root_loglevel: loglevel
+            flags,
+            root_loglevel: loglevel,
+        type_d: Literal['file', 'console'] = 'console'
     ):
         """
+        Более подробное сообщение
 
         :param root_loglevel:
         :param _template:
-        :param flag:
+        :param flags:
         :param data:
         """
 
@@ -255,8 +288,10 @@ class allowed_template_loglevel:
         return _template.format(
             #  Название логера
             title_logger=root_loglevel.title_logger,
-            flag=flag,
-            data=data,
+            # Флаги
+            flags=';'.join([str(x) for x in flags]),
+            # Если нужно обрезаем сообщение
+            data=data[:root_loglevel.max_len_console] if type_d == 'console' and root_loglevel.max_len_console > 0 else data,
             #  Дата создания сообщения
             date_now=datetime.now(),
             # Закрыть цвет
@@ -282,9 +317,10 @@ class logger:
     """
     Стандартные логгеры
     """
+
     test = loglevel(
         'TEST',
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}:\n{data}",
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}:\n{data}",
         color_flag=MetaLogger.gray,
         color_title_logger=MetaLogger.magenta
     )
@@ -293,7 +329,7 @@ class logger:
         int_level=10,
         color_title_logger=MetaLogger.magenta,
         color_flag=MetaLogger.magenta,
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}[{file_call}:{line_call}]:{data}\t\t\t[{context_call}]"
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}[{file_call}:{line_call}]:{data}\t\t\t[{context_call}]"
     )
     info = loglevel(
         "INFO",
@@ -310,16 +346,16 @@ class logger:
     error = loglevel_extend(
         "ERROR",
         int_level=40,
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
-        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_title_logger=MetaLogger.read,
         color_flag=MetaLogger.yellow,
     )
     warning = loglevel_extend(
         "WARNING",
         int_level=30,
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
-        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flag}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_flag=MetaLogger.read,
         color_title_logger=MetaLogger.yellow,
     )
