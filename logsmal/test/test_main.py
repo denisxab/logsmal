@@ -56,7 +56,8 @@ class TestCompressionLog:
         """
         _f = LogFile(file_name)
         _f.deleteFile()
-        logger.test = loglevel("TEST", fileout=file_name, console_out=False, int_level=10)
+        logger.test = loglevel("TEST", fileout=file_name,
+                               console_out=False, int_level=10)
         logger.test("ТЕСТ")
         assert _f.readFile() == '[TEST][]:ТЕСТ\n'
         _f.deleteFile()
@@ -84,3 +85,4 @@ class TestCompressionLog:
         logger.warning("Привет вселенная", 'От землян')
         logger.error("Привет вселенная", 'От землян')
         logger.test("Привет вселенная", 'От землян')
+

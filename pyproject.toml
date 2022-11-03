@@ -17,6 +17,7 @@ exclude = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
+jsonpickle = "^2.2.0"
 
 
 [tool.poetry.dev-dependencies]

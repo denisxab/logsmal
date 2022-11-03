@@ -5,6 +5,7 @@ from os import path
 from typing import Final, Literal
 from typing import Optional, Any, Callable, Union
 
+from .log_row import LogRow
 from .helpful import MetaLogger
 from .independent.helpful import toBitSize
 from .independent.log_file import LogFile
@@ -229,17 +230,17 @@ class allowed_template_loglevel:
 
     :Пример передачи:
 
-    ``{level}{flags}{data}\n``
-    ``{color_loglevel}{level}{reset}{color_flag}{flags}{reset}``
+    `{level}{flags}{data}`
+    `{color_loglevel}{level}{reset}{color_flag}{flags}{reset}`
     """
 
     def __new__(
-            cls,
-            _template: str,
-            data,
-            flags,
-            root_loglevel: loglevel,
-            type_d: Literal['file', 'console'] = 'console'
+        cls,
+        _template: str,
+        data,
+        flags,
+        root_loglevel: loglevel,
+        type_d: Literal['file', 'console'] = 'console'
     ) -> str:
         """
         Обычное сообщение
@@ -248,31 +249,33 @@ class allowed_template_loglevel:
         :param flags:
         :param data:
         """
-
-        return _template.format(
-            #  Название логера
-            title_logger=root_loglevel.title_logger,
-            # Флаги
-            flags=';'.join([str(x) for x in flags]),
-            # Если нужно обрезаем сообщение
-            data=data[:root_loglevel.max_len_console] if type_d == 'console' and root_loglevel.max_len_console > 0 else data,
-            #  Дата создания сообщения
-            date_now=datetime.now(),
-            # Закрыть цвет
-            reset=MetaLogger.reset_,
-            #  Цвет заголовка логера
-            color_title_logger=root_loglevel.color_title_logger,
-            # Цвет флага
-            color_flag=root_loglevel.color_flag,
-        )
+        if type_d == 'console':
+            return _template.format(
+                #  Название логера
+                title_logger=root_loglevel.title_logger,
+                # Флаги
+                flags=';'.join([str(x) for x in flags]),
+                # Если нужно обрезаем сообщение
+                data=data[:root_loglevel.max_len_console] if root_loglevel.max_len_console > 0 else data,
+                #  Дата создания сообщения
+                date_now=datetime.now(),
+                # Закрыть цвет
+                reset=MetaLogger.reset_,
+                #  Цвет заголовка логера
+                color_title_logger=root_loglevel.color_title_logger,
+                # Цвет флага
+                color_flag=root_loglevel.color_flag,
+            )
+        else:
+            return LogRow._(title=root_loglevel.title_logger, flags=flags, data=data, is_trace=False, stack_back=5)
 
     @classmethod
     def debug_new(
-            cls,
-            _template: str,
-            data,
-            flags,
-            root_loglevel: loglevel,
+        cls,
+        _template: str,
+        data,
+        flags,
+        root_loglevel: loglevel,
         type_d: Literal['file', 'console'] = 'console'
     ):
         """
@@ -283,34 +286,36 @@ class allowed_template_loglevel:
         :param flags:
         :param data:
         """
-
-        caller = getframeinfo(stack()[4][0])
-        return _template.format(
-            #  Название логера
-            title_logger=root_loglevel.title_logger,
-            # Флаги
-            flags=';'.join([str(x) for x in flags]),
-            # Если нужно обрезаем сообщение
-            data=data[:root_loglevel.max_len_console] if type_d == 'console' and root_loglevel.max_len_console > 0 else data,
-            #  Дата создания сообщения
-            date_now=datetime.now(),
-            # Закрыть цвет
-            reset=MetaLogger.reset_,
-            #  Цвет заголовка логера
-            color_title_logger=root_loglevel.color_title_logger,
-            # Цвет флага
-            color_flag=root_loglevel.color_flag,
-            # Номер строки
-            line_call=caller.lineno,
-            # Функция в которой вызвана функция
-            func_call=caller.function,
-            # Контекст
-            context_call=''.join(caller.code_context[0].split()),
-            # Абсолютный путь к файлу в котором вызвана функция
-            abs_file_call=caller.filename,
-            # Файл в котором вызвана функция
-            file_call=path.basename(caller.filename)
-        )
+        if type_d == 'console':
+            caller = stack()[4]
+            return _template.format(
+                #  Название логера
+                title_logger=root_loglevel.title_logger,
+                # Флаги
+                flags=';'.join([str(x) for x in flags]),
+                # Если нужно обрезаем сообщение
+                data=data[:root_loglevel.max_len_console] if root_loglevel.max_len_console > 0 else data,
+                #  Дата создания сообщения
+                date_now=datetime.now(),
+                # Закрыть цвет
+                reset=MetaLogger.reset_,
+                #  Цвет заголовка логера
+                color_title_logger=root_loglevel.color_title_logger,
+                # Цвет флага
+                color_flag=root_loglevel.color_flag,
+                # Номер строки
+                line_call=caller.lineno,
+                # Функция в которой вызвана функция
+                func_call=caller.function,
+                # Контекст
+                context_call=''.join(caller.code_context[0].split()),
+                # Абсолютный путь к файлу в котором вызвана функция
+                abs_file_call=caller.filename,
+                # Файл в котором вызвана функция
+                file_call=path.basename(caller.filename)
+            )
+        else:
+            return LogRow._(title=root_loglevel.title_logger, flags=flags, data=data, is_trace=True, stack_back=5)
 
 
 class logger:
