@@ -250,6 +250,8 @@ class loglevel_form_error(loglevel_extend):
         """
         if not self.fileout:
             raise FileNotFoundError('Не указан путь для лог файла')
+        # traceback.format_exception(e) # В виде списка
+        # traceback.format_exc(e) # В виде текста
         error: str = traceback.format_exc()
         id_error_log: str = hashlib.md5(error.encode("utf-8")).hexdigest()
         self(f"ERROR_LOG: {id_error_log}")
