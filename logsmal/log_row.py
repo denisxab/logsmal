@@ -1,13 +1,10 @@
 from inspect import FrameInfo, stack
-import jsonpickle
 import datetime
 import typing
-
-# В UTF-8
-jsonpickle.set_encoder_options('json', ensure_ascii=False)
+from pydantic import BaseModel
 
 
-class LogRowTraceWhere(typing.NamedTuple):
+class LogRowTraceWhere(BaseModel):
     """Где происошло событие"""
     # Файл
     filename: str
@@ -17,7 +14,7 @@ class LogRowTraceWhere(typing.NamedTuple):
     line: str
 
 
-class LogRowTrace(typing.NamedTuple):
+class LogRowTrace(BaseModel):
     """Подробные данные для строки лога"""
     # Где случился вызов лога (ПутьФайлу:Функция:строка).
     where: LogRowTraceWhere
@@ -25,7 +22,7 @@ class LogRowTrace(typing.NamedTuple):
     loacl: dict[str, typing.Any]
 
 
-class LogRow(typing.NamedTuple):
+class LogRow(BaseModel):
     """Строка лог"""
     # Дата лога
     date: str
@@ -36,7 +33,7 @@ class LogRow(typing.NamedTuple):
     # Лог сообщение
     data: str
     # Подробные данные, для отладки
-    trace: LogRowTrace
+    trace: LogRowTrace | None
 
     def _(title: str, flags: list[str], data: str, is_trace: bool = False, stack_back: int = 1) -> str:
         """
@@ -45,18 +42,18 @@ class LogRow(typing.NamedTuple):
         row = None
         if not is_trace:
             row = LogRow(
-                date=datetime.datetime.now(),
-                title=title, flags=flags, data=data, trace=None)
+                date=str(datetime.datetime.now()),
+                title=title, flags=[str(x) for x in flags], data=repr(data), trace=None)
         else:
             where: FrameInfo = stack()[stack_back]
             row = LogRow(
-                date=datetime.datetime.now(), title=title, flags=flags,
-                data=data, trace=LogRowTrace(
+                date=str(datetime.datetime.now()), title=title, flags=[str(x) for x in flags],
+                data=repr(data), trace=LogRowTrace(
                     where=LogRowTraceWhere(
                         filename=where.filename,
                         func=where.function, line=where.lineno
                     ),
-                    loacl=where.frame.f_locals
+                    loacl={k: repr(v) for k, v in where.frame.f_locals.items()}
                 )
             )
-        return f"{jsonpickle.encode(row, unpicklable=False)}\n"
+        return f"{row.json(ensure_ascii=False)}\n"

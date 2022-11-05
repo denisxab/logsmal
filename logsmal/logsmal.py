@@ -1,7 +1,12 @@
+from pathlib import Path
+# pip install rich
+from rich.console import Console
 from datetime import datetime
 from enum import Enum
-from inspect import stack, getframeinfo
+import hashlib
+from inspect import stack
 from os import path
+import traceback
 from typing import Final, Literal
 from typing import Optional, Any, Callable, Union
 
@@ -11,7 +16,7 @@ from .independent.helpful import toBitSize
 from .independent.log_file import LogFile
 from .independent.zip_file import ZippFile, ZipCompression
 
-__all__ = ["logger", "loglevel"]
+__all__ = ["logger", "loglevel", ]
 
 
 class CompressionLog(Enum):
@@ -57,14 +62,13 @@ class loglevel:
             self,
             title_logger: str,
             int_level: int = 10,
-            fileout: Optional[str] = None,
+            fileout: Optional[Path] = None,
             console_out: bool = True,
             color_flag: str = "",
             color_title_logger: str = "",
             max_size_file: Optional[Union[int, str]] = "10mb",
             max_len_console: int = 0,
             compression: Optional[Union[CompressionLog, Callable]] = None,
-            template_file: str = "[{date_now}][{title_logger}][{flags}]:{data}\n",
             template_console: str = "{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}:{data}",
             **kwargs,
     ):
@@ -82,11 +86,10 @@ class loglevel:
             - None - Без ограничений
         :param max_len_console: Скольки максимум символов выводить в консоль, остальное обрезать.По умолчанию не обрезать  
         :param compression: Что делать с файлам после достижение ``max_size_file``
-        :param template_file: Доступные аргументы в :meth:`allowed_template_loglevel`
         :param template_console: Доступные аргументы в :meth:`allowed_template_loglevel`
         """
         self.title_logger: str = title_logger
-        self.fileout: Optional[str] = fileout
+        self.fileout: Optional[Path] = fileout
         if fileout:
             # Если указан файл, то добавляем функцию для записи в файл
             self._base_logic = lambda data, flags: (self._file_write(
@@ -103,7 +106,6 @@ class loglevel:
         self.max_len_console: int = max_len_console
         self.compression: Callable = compression if compression else CompressionLog.rewrite_file
         self.int_level: int = int_level
-        self.template_file: str = template_file
         self.template_console: str = template_console
 
         #: Сколько раз было записей в лог файл, до выполнения
@@ -131,7 +133,7 @@ class loglevel:
         """
         # Формируем сообщение в файл
         log_formatted = allowed_template_loglevel(
-            self.template_file, data, flags, self, 'file')
+            None, data, flags, self, 'file')
         # Записываем в файл
         _f = LogFile(self.fileout)
         _f.appendFile(log_formatted)
@@ -201,7 +203,7 @@ class loglevel_extend(loglevel):
     def _file_write(self, data: Any, flags: str):
         # Формируем сообщение в файл
         log_formatted = allowed_template_loglevel.debug_new(
-            self.template_file, data, flags, self, 'file')
+            None, data, flags, self, 'file')
         # Записываем в файл
         _f = LogFile(self.fileout)
         _f.appendFile(log_formatted)
@@ -222,6 +224,53 @@ class loglevel_extend(loglevel):
         kwargs: Обновление для loglevel_extend.__init__ 
         """
         return loglevel_extend(**dict(self.__dict__, **kwargs))
+
+
+class loglevel_form_error(loglevel_extend):
+    """
+    Логгер для ошибок
+    """
+
+    def _file_write(self, data: Any, flags: str):
+        # Формируем сообщение в файл
+        log_formatted = allowed_template_loglevel.debug_new(
+            None, data, flags, self, 'file')
+        # Записываем в файл
+        _f = LogFile(self.fileout)
+        _f.appendFile(log_formatted)
+        # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
+        self._check_size_log_file(_f)
+
+    def detail(self, msg: str, *, file_name="detail_error.log") -> str:
+        """Подробный вывод ошибки
+
+        :param path_log: Путь лог файлу
+        :param msg: Сообщение
+        :return: Текст ошибки, и идентификатор(ERROR_LOG) на полный стек ошибки в файле
+        """
+        if not self.fileout:
+            raise FileNotFoundError('Не указан путь для лог файла')
+        error: str = traceback.format_exc()
+        id_error_log: str = hashlib.md5(error.encode("utf-8")).hexdigest()
+        self(f"ERROR_LOG: {id_error_log}")
+        time_now = datetime.now()
+        error += f'\n:::::ERROR_LOG::::: {id_error_log}'
+        with open(self.fileout.parent / file_name, 'a') as f:
+            console = Console(width=180, file=f)
+            f.write(
+                f'BEGIN---|{time_now}|{id_error_log}|{msg}\n')
+            console.print_exception(show_locals=True)
+            f.write(
+                f'END__---|{time_now}|{id_error_log}|{msg}\n')
+        return error
+
+    def updateCopy(self, **kwargs):
+        """
+        Вернуть обновленную версию loglevel_form_error
+
+        kwargs: Обновление для loglevel_form_error.__init__ 
+        """
+        return loglevel_form_error(**dict(self.__dict__, **kwargs))
 
 
 class allowed_template_loglevel:
@@ -267,6 +316,7 @@ class allowed_template_loglevel:
                 color_flag=root_loglevel.color_flag,
             )
         else:
+            # file
             return LogRow._(title=root_loglevel.title_logger, flags=flags, data=data, is_trace=False, stack_back=5)
 
     @classmethod
@@ -294,7 +344,8 @@ class allowed_template_loglevel:
                 # Флаги
                 flags=';'.join([str(x) for x in flags]),
                 # Если нужно обрезаем сообщение
-                data=data[:root_loglevel.max_len_console] if root_loglevel.max_len_console > 0 else data,
+                data=str(data)[
+                    :root_loglevel.max_len_console] if root_loglevel.max_len_console > 0 else data,
                 #  Дата создания сообщения
                 date_now=datetime.now(),
                 # Закрыть цвет
@@ -315,6 +366,7 @@ class allowed_template_loglevel:
                 file_call=path.basename(caller.filename)
             )
         else:
+            # file
             return LogRow._(title=root_loglevel.title_logger, flags=flags, data=data, is_trace=True, stack_back=5)
 
 
@@ -348,22 +400,21 @@ class logger:
         color_title_logger=MetaLogger.green,
         color_flag=MetaLogger.gray,
     )
-    error = loglevel_extend(
+    error = loglevel_form_error(
         "ERROR",
         int_level=40,
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
-        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}:{line_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_title_logger=MetaLogger.read,
         color_flag=MetaLogger.yellow,
     )
     warning = loglevel_extend(
         "WARNING",
         int_level=30,
-        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
-        template_file="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}{line_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_flag=MetaLogger.read,
         color_title_logger=MetaLogger.yellow,
     )
+
     #: Логгер для системных задач
     system_info: Final[loglevel] = loglevel(
         "SYSTEM",
