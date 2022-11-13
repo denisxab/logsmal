@@ -434,7 +434,7 @@ class logger:
     errordet = loglevel_form_error(
         "ERROR",
         int_level=40,
-        fileout='./errordet.log'
+        fileout='./errordet.log',
         template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}:{line_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_title_logger=MetaLogger.read,
         color_flag=MetaLogger.yellow,
