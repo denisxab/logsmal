@@ -1,3 +1,4 @@
+from io import StringIO
 from pathlib import Path
 # pip install rich
 from rich.console import Console
@@ -84,7 +85,7 @@ class loglevel:
             - kb - Например 10kb
             - mb - Например 1mb
             - None - Без ограничений
-        :param max_len_console: Скольки максимум символов выводить в консоль, остальное обрезать.По умолчанию не обрезать  
+        :param max_len_console: Скольки максимум символов выводить в консоль, остальное обрезать.По умолчанию не обрезать
         :param compression: Что делать с файлам после достижение ``max_size_file``
         :param template_console: Доступные аргументы в :meth:`allowed_template_loglevel`
         """
@@ -188,7 +189,7 @@ class loglevel:
         """
         Вернуть обновленную версию loglevel
 
-        kwargs: Обновление для loglevel.__init__ 
+        kwargs: Обновление для loglevel.__init__
         """
         return loglevel(**dict(self.__dict__, **kwargs))
 
@@ -221,7 +222,7 @@ class loglevel_extend(loglevel):
         """
         Вернуть обновленную версию loglevel_extend
 
-        kwargs: Обновление для loglevel_extend.__init__ 
+        kwargs: Обновление для loglevel_extend.__init__
         """
         return loglevel_extend(**dict(self.__dict__, **kwargs))
 
@@ -233,44 +234,65 @@ class loglevel_form_error(loglevel_extend):
 
     def _file_write(self, data: Any, flags: str):
         # Формируем сообщение в файл
-        log_formatted = allowed_template_loglevel.debug_new(
-            None, data, flags, self, 'file')
+        log_formatted, error = self.detail(data)
         # Записываем в файл
         _f = LogFile(self.fileout)
         _f.appendFile(log_formatted)
         # Проверить размер файла, если размер больше ``self.max_size_file`` то произойдет ``self.compression``
         self._check_size_log_file(_f)
+        return error
 
-    def detail(self, msg: str, *, file_name="detail_error.log") -> str:
+    def __call__(self, data: str, flags: list[str] = ""):
+        """
+        Вызвать логгер
+
+        :param data:
+        :param flags:
+        """
+        # Если уровень доступа выше или равен требуемому
+        if self.int_level >= self.required_level:
+            # Выполняем логику логера
+            return self._base_logic(data, flags)[0]
+
+    def _console_print(self, data: Any, flags: str):
+        if self.console_out:
+            # Формируем сообщение в консоль
+            log_formatted = allowed_template_loglevel.debug_new(
+                self.template_console, data, flags, self, 'console')
+            error: str = traceback.format_exc()
+            id_error_log: str = hashlib.md5(error.encode("utf-8")).hexdigest()
+            log_formatted += f":::::ERROR_LOG:::::: {id_error_log}"
+            print(log_formatted)
+
+    def detail(self, msg: str) -> str:
         """Подробный вывод ошибки
 
         :param path_log: Путь лог файлу
         :param msg: Сообщение
         :return: Текст ошибки, и идентификатор(ERROR_LOG) на полный стек ошибки в файле
         """
-        if not self.fileout:
-            raise FileNotFoundError('Не указан путь для лог файла')
         # traceback.format_exception(e) # В виде списка
         # traceback.format_exc(e) # В виде текста
         error: str = traceback.format_exc()
         id_error_log: str = hashlib.md5(error.encode("utf-8")).hexdigest()
-        self(f"ERROR_LOG: {id_error_log}")
         time_now = datetime.now()
-        error += f'\n:::::ERROR_LOG::::: {id_error_log}'
-        with open(self.fileout.parent / file_name, 'a') as f:
-            console = Console(width=180, file=f)
-            f.write(
-                f'BEGIN---|{time_now}|{id_error_log}|{msg}\n')
-            console.print_exception(show_locals=True)
-            f.write(
-                f'END__---|{time_now}|{id_error_log}|{msg}\n')
-        return error
+        #
+        console = Console(width=180, file=StringIO())
+        console.print_exception(show_locals=True)
+        str_output = console.file.getvalue()
+        #
+        res = """{0}{1}{2}""".format(
+            f'BEGIN---|{time_now}|{id_error_log}|{msg}\n',
+            str_output,
+            f'END__---|{time_now}|{id_error_log}|{msg}\n'
+        )
+        return res, f'{error}\n:::::ERROR_LOG::::: {id_error_log}'
 
     def updateCopy(self, **kwargs):
         """
         Вернуть обновленную версию loglevel_form_error
 
-        kwargs: Обновление для loglevel_form_error.__init__ 
+        kwargs: Обновление для loglevel_form_error.__init__
         """
         return loglevel_form_error(**dict(self.__dict__, **kwargs))
 
@@ -321,7 +343,7 @@ class allowed_template_loglevel:
             # file
             return LogRow._(title=root_loglevel.title_logger, flags=flags, data=data, is_trace=False, stack_back=5)
 
-    @classmethod
+    @ classmethod
     def debug_new(
         cls,
         _template: str,
@@ -402,9 +424,17 @@ class logger:
         color_title_logger=MetaLogger.green,
         color_flag=MetaLogger.gray,
     )
-    error = loglevel_form_error(
+    error = loglevel_extend(
         "ERROR",
         int_level=40,
+        template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}:{line_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
+        color_title_logger=MetaLogger.read,
+        color_flag=MetaLogger.yellow,
+    )
+    errordet = loglevel_form_error(
+        "ERROR",
+        int_level=40,
+        fileout='./errordet.log'
         template_console="{color_title_logger}[{title_logger}]{reset}{color_flag}[{flags}]{reset}{color_flag}[{date_now}][{file_call}:{func_call}:{line_call}]{reset}\n{color_flag}Text:{reset}\t{data}\n{color_flag}Path:{reset}\t{abs_file_call}:{line_call}\n{color_flag}Context:{reset}\t{context_call}{color_title_logger}\n[/END_{title_logger}]{reset}",
         color_title_logger=MetaLogger.read,
         color_flag=MetaLogger.yellow,
